@@ -1,11 +1,4 @@
-# Apartment Chores: setup (about 20 minutes)
 
-Files:
-- `index.html`: the website. It has three tabs: This week, Schedule (one year ahead) and Leaderboard.
-- `schedule.js`: the rotation logic, shared by the website and the notifications
-- `config.json`: names, chores, toilet groups and settings
-- `notify.js`: sends the ntfy notifications
-- `.github/workflows/chores.yml`: runs `notify.js` on schedule
 
 ## How the rotation works
 - Every week, each of the 11 people gets exactly one task.
