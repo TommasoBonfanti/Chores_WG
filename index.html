@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apartment Chores</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --text: #1d1d1b; --muted: #6b6a65;
+    --line: #e4e2db; --accent: #2f7d5b; --accent-soft: #e3f1ea; --mine: #fff3cc;
+    --bad: #b3452f; --bad-soft: #f8e1dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614; --card: #21211e; --text: #f0efe9; --muted: #a09f98;
+      --line: #34332f; --accent: #5cc193; --accent-soft: #1f3a2d; --mine: #3d3519;
+      --bad: #ec8a74; --bad-soft: #3d221c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 20px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 12px; }
+  .top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; color: var(--muted); }
+  select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--text); }
+  nav { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 4px; margin-bottom: 18px; }
+  nav button { flex: 1; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600;
+    padding: 8px 4px; border-radius: 9px; cursor: pointer; }
+  nav button.on { background: var(--accent-soft); color: var(--text); }
+  section { display: none; } section.on { display: block; }
+  .week { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .week button { border: 1px solid var(--line); background: var(--card); color: var(--text);
+    border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 1.1rem; flex: none; }
+  .week span { flex: 1; text-align: center; font-weight: 600; }
+  .sub { color: var(--muted); font-size: .9rem; }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 6px 0 16px; }
+  .bar div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .list { list-style: none; padding: 0; margin: 0; background: var(--card);
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .list li { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-top: 1px solid var(--line); }
+  .list li:first-child { border-top: none; }
+  .list li.mine { background: var(--mine); }
+  .list li.done .task { text-decoration: line-through; color: var(--muted); }
+  input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent); flex: none; cursor: pointer; }
+  .grow { flex: 1; min-width: 0; }
+  .task { font-weight: 600; }
+  .note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: .9rem; }
+  .err { background: var(--bad-soft); color: var(--bad); }
+  code { font-size: .85em; word-break: break-all; }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+  table { border-collapse: collapse; font-size: .85rem; width: 100%; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--card); font-weight: 600; color: var(--muted); }
+  td:first-child, th:first-child { position: sticky; left: 0; background: var(--card); font-weight: 600; }
+  tr.now td { background: var(--accent-soft); }
+  td.me { background: var(--mine) !important; font-weight: 600; }
+  .lb li { gap: 14px; }
+  .rank { width: 28px; text-align: center; font-weight: 700; color: var(--muted); flex: none; }
+  .score { text-align: right; flex: none; }
+  .score b { font-size: 1.15rem; }
+  .miss { color: var(--bad); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Chores</h1>
+  <div class="top">
+    <label for="me">I am</label>
+    <select id="me"><option value="">— pick your name —</option></select>
+  </div>
+  <nav>
+    <button data-tab="week" class="on">This week</button>
+    <button data-tab="plan">Schedule</button>
+    <button data-tab="board">Leaderboard</button>
+  </nav>
+
+  <section id="week" class="on">
+    <div class="week">
+      <button id="prev" aria-label="Previous week">‹</button>
+      <span id="weekLabel"></span>
+      <button id="next" aria-label="Next week">›</button>
+    </div>
+    <div id="progressText" class="sub"></div>
+    <div class="bar"><div id="progress"></div></div>
+    <ul class="list" id="list"></ul>
+    <div class="sub" style="margin-top:10px">Deadline: Monday 12:00. Until then you can still tick off last week's task.</div>
+  </section>
+
+  <section id="plan">
+    <div class="top">
+      <label for="planWho">Show</label>
+      <select id="planWho"><option value="">Everyone</option></select>
+    </div>
+    <div class="scroll" id="planTable"></div>
+  </section>
+
+  <section id="board">
+    <ul class="list lb" id="board-list"></ul>
+    <div class="sub" style="margin-top:10px">"Missed" counts finished weeks where the task was never ticked off.</div>
+  </section>
+
+  <div id="msg"></div>
+  <div class="note" id="subscribe"></div>
+</main>
+
+<script src="schedule.js"></script>
+<script>
+const S = window.ChoreSchedule;
+let cfg, currentWeek, viewWeek, dbReady = false;
+let doneByWeek = new Map(); // week -> Map(task -> person)
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+const fmt = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+function weekLabel(w) {
+  const start = S.weekStart(cfg, w), end = new Date(start.getTime() + 6 * S.DAY);
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+function weekTag(w) {
+  if (currentWeek < 0 && w === 0) return 'Starts Monday';
+  return w === currentWeek ? 'This week' : w === currentWeek - 1 ? 'Last week' : w < currentWeek ? 'Past week' : 'Upcoming';
+}
+// Monday before noon in Zurich: last week's tasks can still be ticked off.
+function graceDay() {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: S.TZ, weekday: 'short', hour: 'numeric', hour12: false })
+    .formatToParts(new Date());
+  const wd = parts.find(p => p.type === 'weekday').value, h = +parts.find(p => p.type === 'hour').value;
+  return wd === 'Mon' && h < 12;
+}
+const isDone = (w, task) => doneByWeek.has(w) && doneByWeek.get(w).has(task);
+
+// ---------- Supabase ----------
+function api(path, opts = {}) {
+  return fetch(`${cfg.supabaseUrl}/rest/v1/${path}`, {
+    ...opts,
+    headers: { apikey: cfg.supabaseKey, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  }).then(r => {
+    if (!r.ok) throw new Error(r.status);
+    return (r.status === 204 || r.status === 201) ? null : r.json();
+  });
+}
+async function loadAll() {
+  if (!dbReady) return;
+  try {
+    const rows = [];
+    for (let off = 0; ; off += 1000) {
+      const page = await api(`completions?select=week,chore,person&order=week&limit=1000&offset=${off}`);
+      rows.push(...page);
+      if (page.length < 1000) break;
+    }
+    doneByWeek = new Map();
+    for (const r of rows) {
+      if (!doneByWeek.has(r.week)) doneByWeek.set(r.week, new Map());
+      doneByWeek.get(r.week).set(r.chore, r.person);
+    }
+    $('msg').innerHTML = '';
+  } catch (e) {
+    $('msg').innerHTML = `<div class="note err">Couldn't load check-offs (${e.message}). Refresh to try again.</div>`;
+  }
+  renderAll();
+}
+async function toggle(task, person, checked) {
+  const w = viewWeek;
+  if (!doneByWeek.has(w)) doneByWeek.set(w, new Map());
+  const m = doneByWeek.get(w);
+  checked ? m.set(task, person) : m.delete(task);
+  renderAll();
+  try {
+    if (checked) {
+      await api('completions', { method: 'POST', headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ week: w, chore: task, person }) });
+    } else {
+      await api(`completions?week=eq.${w}&chore=eq.${encodeURIComponent(task)}`, { method: 'DELETE' });
+    }
+  } catch (e) {
+    checked ? m.delete(task) : m.set(task, person);
+    renderAll();
+    alert("That didn't save. Check your connection and try again.");
+  }
+}
+
+// ---------- Rendering ----------
+function renderWeek() {
+  const me = $('me').value;
+  const items = S.weekAssignments(cfg, viewWeek);
+  items.sort((a, b) => (b.person === me) - (a.person === me));
+  // Editable: this week and last week (deadline is Monday morning).
+  const canEdit = dbReady && currentWeek >= 0 &&
+    (viewWeek === currentWeek || (viewWeek === currentWeek - 1 && graceDay()));
+  $('weekLabel').textContent = `${weekTag(viewWeek)} · ${weekLabel(viewWeek)}`;
+  $('prev').disabled = viewWeek <= 0;
+  $('list').innerHTML = '';
+  for (const { task, person } of items) {
+    const li = document.createElement('li');
+    const done = isDone(viewWeek, task);
+    if (person === me) li.classList.add('mine');
+    if (done) li.classList.add('done');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = done; cb.disabled = !canEdit;
+    cb.setAttribute('aria-label', `${task} done`);
+    cb.onchange = () => toggle(task, person, cb.checked);
+    const text = document.createElement('div');
+    text.className = 'grow';
+    const t = document.createElement('div'); t.className = 'task'; t.textContent = task;
+    const p = document.createElement('div'); p.className = 'sub'; p.textContent = person === me ? `${person} (you)` : person;
+    text.append(t, p);
+    li.append(cb, text);
+    $('list').append(li);
+  }
+  const n = items.length, d = items.filter(i => isDone(viewWeek, i.task)).length;
+  $('progress').style.width = `${(d / n) * 100}%`;
+  $('progressText').textContent = dbReady ? `${d} of ${n} done` : '';
+}
+
+function renderPlan() {
+  const who = $('planWho').value, me = $('me').value;
+  const from = Math.max(currentWeek, 0), to = from + 52;
+  S.buildSchedule(cfg, to);
+  const tasks = S.tasks(cfg);
+  let html = '<table>';
+  if (who) {
+    html += '<tr><th>Week</th><th>Task</th></tr>';
+    for (let w = from; w <= to; w++) {
+      const a = S.weekAssignments(cfg, w).find(x => x.person === who);
+      html += `<tr class="${w === currentWeek ? 'now' : ''}"><td>${weekLabel(w)}</td><td>${esc(a.task)}</td></tr>`;
+    }
+  } else {
+    html += '<tr><th>Week</th>' + tasks.map(t => `<th>${esc(t)}</th>`).join('') + '</tr>';
+    for (let w = from; w <= to; w++) {
+      const a = S.weekAssignments(cfg, w);
+      html += `<tr class="${w === currentWeek ? 'now' : ''}"><td>${fmt(S.weekStart(cfg, w))}</td>` +
+        a.map(x => `<td class="${x.person === me ? 'me' : ''}">${esc(x.person)}</td>`).join('') + '</tr>';
+    }
+  }
+  $('planTable').innerHTML = html + '</table>';
+}
+
+function renderBoard() {
+  const me = $('me').value;
+  const stats = Object.fromEntries(cfg.people.map(p => [p, { done: 0, missed: 0 }]));
+  const last = Math.max(currentWeek, -1);
+  for (let w = 0; w <= last; w++) {
+    for (const { task, person } of S.weekAssignments(cfg, w)) {
+      if (isDone(w, task)) stats[person].done++;
+      else if (w < currentWeek - 1 || (w === currentWeek - 1 && !graceDay())) stats[person].missed++;
+    }
+  }
+  const rows = cfg.people.map(p => ({ p, ...stats[p] }))
+    .sort((a, b) => b.done - a.done || a.missed - b.missed || a.p.localeCompare(b.p));
+  $('board-list').innerHTML = '';
+  let rank = 0, prev = null;
+  rows.forEach((r, i) => {
+    const key = `${r.done}/${r.missed}`;
+    if (key !== prev) { rank = i + 1; prev = key; }
+    const li = document.createElement('li');
+    if (r.p === me) li.classList.add('mine');
+    const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[rank] || rank;
+    li.innerHTML = `<div class="rank"></div><div class="grow task"></div><div class="score"><b></b> done<div class="miss"></div></div>`;
+    li.querySelector('.rank').textContent = r.done ? medal : rank;
+    li.querySelector('.task').textContent = r.p;
+    li.querySelector('b').textContent = r.done;
+    li.querySelector('.miss').textContent = r.missed ? `${r.missed} missed` : '';
+    $('board-list').append(li);
+  });
+  if (!dbReady) $('board-list').innerHTML = '<li class="sub">The leaderboard appears once Supabase is set up.</li>';
+}
+
+function renderAll() { renderWeek(); renderPlan(); renderBoard(); }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+(async function init() {
+  cfg = await fetch('config.json', { cache: 'no-store' }).then(r => r.json());
+  document.title = cfg.apartmentName;
+  $('title').textContent = cfg.apartmentName;
+  dbReady = !!(cfg.supabaseUrl && cfg.supabaseKey);
+  currentWeek = S.weekIndex(cfg);
+  viewWeek = Math.max(currentWeek, 0);
+
+  for (const p of cfg.people) { $('me').add(new Option(p, p)); $('planWho').add(new Option(p, p)); }
+  $('me').value = store.get('me') || '';
+  $('planWho').value = $('me').value;
+  $('me').onchange = () => { store.set('me', $('me').value); $('planWho').value = $('me').value; renderAll(); };
+  $('planWho').onchange = renderPlan;
+  $('prev').onclick = () => { viewWeek = Math.max(0, viewWeek - 1); renderWeek(); };
+  $('next').onclick = () => { viewWeek++; renderWeek(); };
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('nav button, section').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); $(b.dataset.tab).classList.add('on');
+  });
+
+  $('subscribe').innerHTML = '🔔 Notifications: install the <b>ntfy</b> app and subscribe to <code></code>';
+  $('subscribe').querySelector('code').textContent = cfg.ntfyTopic;
+  if (!dbReady) $('msg').innerHTML = '<div class="note err">Ticking off is disabled until Supabase is set up in <code>config.json</code>.</div>';
+
+  renderAll();
+  loadAll();
+  setInterval(() => { if (!document.hidden) loadAll(); }, 30000);
+})();
+</script>
+</body>
+</html>

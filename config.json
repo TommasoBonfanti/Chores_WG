@@ -1,0 +1,25 @@
+{
+  "apartmentName": "Apartment Chores",
+  "startDate": "2026-10-12",
+  "people": ["Tommaso", "Dea", "Nicola", "Mounir", "Kevin", "Diego", "Oscar", "Vid", "Veronika", "Ana", "Joel"],
+  "chores": [
+    "Kitchen floor",
+    "Recycling",
+    "Garbage",
+    "Kitchen cleaning",
+    "Table",
+    "Washing towels",
+    "Plant + kettle + microwave",
+    "Hallway floors"
+  ],
+  "toilets": [
+    { "name": "Toilet 1", "members": ["Nicola", "Mounir", "Dea"] },
+    { "name": "Toilet 2", "members": ["Veronika", "Ana", "Kevin", "Diego"] },
+    { "name": "Toilet 3", "members": ["Tommaso", "Vid", "Oscar", "Joel"] }
+  ],
+  "recyclingTask": "Recycling",
+  "siteUrl": "https://TommasoBonfanti.github.io/chores/",
+  "ntfyTopic": "second-og-west-chores",
+  "supabaseUrl": "stunnuaoxbyeivunqwqx",
+  "supabaseKey": "sb_publishable_5k1ZTQ3vio5_1QRTUto0TQ_GEQO7tyc"
+}
